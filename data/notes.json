@@ -1,0 +1,16 @@
+[
+  {
+    "id": "mcp-host-client",
+    "title": "MCP Host와 Client",
+    "body": "MCP Host는 사용자 인터페이스와 LLM, 권한, 연결을 관리합니다. Host 내부의 MCP Client가 각 MCP Server와 통신합니다.",
+    "tags": ["mcp", "architecture"],
+    "createdAt": "2026-07-24T00:00:00.000Z"
+  },
+  {
+    "id": "mcp-primitives",
+    "title": "Tools, Resources, Prompts",
+    "body": "Tool은 모델이 실행하고, Resource는 애플리케이션이 컨텍스트로 읽으며, Prompt는 사용자가 명시적으로 선택하는 재사용 워크플로입니다.",
+    "tags": ["mcp", "concepts"],
+    "createdAt": "2026-07-24T00:00:00.000Z"
+  }
+]

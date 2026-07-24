@@ -1,0 +1,41 @@
+{
+  "name": "pocket-notes-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A small, learning-focused MCP server that demonstrates tools, resources, prompts, completion, sampling, elicitation, progress, and cancellation.",
+  "type": "module",
+  "bin": {
+    "pocket-notes-mcp": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "data",
+    "README.md"
+  ],
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/index.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "smoke": "npm run build && node scripts/stdio-smoke.mjs",
+    "check": "npm run typecheck && npm test && npm run smoke"
+  },
+  "engines": {
+    "node": ">=22 <27"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.29.0",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.1",
+    "tsx": "4.23.1",
+    "typescript": "7.0.2",
+    "vitest": "4.1.10"
+  },
+  "overrides": {
+    "@hono/node-server": "2.0.11"
+  }
+}
