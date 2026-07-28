@@ -132,9 +132,10 @@ pocket-notes-mcp/
 │   ├── note-store.test.ts
 │   ├── server.test.ts
 │   └── client-capabilities.test.ts
+├── scripts/
+│   └── stdio-smoke.ts           실제 stdio 연결 smoke test
 ├── package.json
-├── tsconfig.json
-└── tsconfig.build.json
+└── tsconfig.json
 ```
 
 파일은 MCP 개념별로 나눴지만 별도의 프레임워크나 DI 컨테이너, 데이터베이스,

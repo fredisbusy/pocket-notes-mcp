@@ -1,7 +1,7 @@
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 
-import { noteToMarkdown, toNoteSummary } from "./note.js";
-import type { NoteStore } from "./note-store.js";
+import { noteToMarkdown, toNoteSummary } from "./note";
+import type { NoteStore } from "./note-store";
 
 export function registerResources(server: McpServer, store: NoteStore): void {
   server.registerResource(

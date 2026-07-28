@@ -1,9 +1,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
-import type { NoteStore } from "./note-store.js";
-import { registerPrompts } from "./register-prompts.js";
-import { registerResources } from "./register-resources.js";
-import { registerTools } from "./register-tools.js";
+import type { NoteStore } from "./note-store";
+import { registerPrompts } from "./register-prompts";
+import { registerResources } from "./register-resources";
+import { registerTools } from "./register-tools";
 
 export function createServer(store: NoteStore): McpServer {
   const server = new McpServer(

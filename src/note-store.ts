@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 
-import { type Note, noteCollectionSchema } from "./note.js";
+import { type Note, noteCollectionSchema } from "./note";
 
 export interface CreateNoteInput {
   title: string;

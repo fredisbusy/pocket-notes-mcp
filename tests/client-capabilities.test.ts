@@ -2,7 +2,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { Client } from "@modelcontextprotocol/sdk/client";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import {
   CallToolResultSchema,
@@ -12,8 +12,8 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { expect, it } from "vitest";
 
-import { NoteStore } from "../src/note-store.js";
-import { createServer } from "../src/server.js";
+import { NoteStore } from "../src/note-store";
+import { createServer } from "../src/server";
 
 it("uses sampling, elicitation, and roots declared by the client", async () => {
   const temporaryDirectory = await mkdtemp(join(tmpdir(), "pocket-notes-capabilities-"));

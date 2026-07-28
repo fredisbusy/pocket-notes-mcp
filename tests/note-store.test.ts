@@ -4,7 +4,7 @@ import { join } from "node:path";
 
 import { afterEach, describe, expect, it } from "vitest";
 
-import { NoteStore } from "../src/note-store.js";
+import { NoteStore } from "../src/note-store";
 
 const temporaryDirectories: string[] = [];
 

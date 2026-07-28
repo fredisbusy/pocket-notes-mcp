@@ -2,7 +2,7 @@ import { completable } from "@modelcontextprotocol/sdk/server/completable.js";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
-import type { NoteStore } from "./note-store.js";
+import type { NoteStore } from "./note-store";
 
 const reviewStyles = ["beginner", "quiz", "summary", "interview"] as const;
 

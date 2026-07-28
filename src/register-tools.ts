@@ -1,9 +1,9 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
-import { noteSchema, toNoteSummary } from "./note.js";
-import type { NoteStore } from "./note-store.js";
-import { registerClientCapabilityTools } from "./register-client-tools.js";
+import { noteSchema, toNoteSummary } from "./note";
+import type { NoteStore } from "./note-store";
+import { registerClientCapabilityTools } from "./register-client-tools";
 
 const noteSummarySchema = noteSchema.pick({
   id: true,

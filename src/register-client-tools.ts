@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
-import type { NoteStore } from "./note-store.js";
+import type { NoteStore } from "./note-store";
 
 /**
  * Tools in this file demonstrate capabilities provided by the MCP Client.
