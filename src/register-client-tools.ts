@@ -1,6 +1,7 @@
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 
+import { createNoteInputSchema } from "./note";
 import type { NoteStore } from "./note-store";
 
 /**
@@ -15,9 +16,9 @@ export function registerClientCapabilityTools(server: McpServer, store: NoteStor
       title: "Summarize note with the host model",
       description:
         "Read a note and ask the MCP client's language model to summarize it using MCP sampling.",
-      inputSchema: {
+      inputSchema: z.object({
         noteId: z.string().min(1),
-      },
+      }),
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -58,7 +59,7 @@ export function registerClientCapabilityTools(server: McpServer, store: NoteStor
       title: "Create note interactively",
       description:
         "Ask the user for non-sensitive note fields through MCP form elicitation, then create the note.",
-      inputSchema: {},
+      inputSchema: z.object({}),
       annotations: {
         readOnlyHint: false,
         destructiveHint: false,
@@ -107,13 +108,7 @@ export function registerClientCapabilityTools(server: McpServer, store: NoteStor
         };
       }
 
-      const parsed = z
-        .object({
-          title: z.string(),
-          body: z.string(),
-          tags: z.array(z.string()).optional(),
-        })
-        .safeParse(result.content);
+      const parsed = createNoteInputSchema.safeParse(result.content);
       if (!parsed.success) {
         return {
           content: [{ type: "text", text: "호스트가 올바르지 않은 메모 입력을 반환했습니다." }],
@@ -147,7 +142,7 @@ export function registerClientCapabilityTools(server: McpServer, store: NoteStor
       title: "List client workspace roots",
       description:
         "Ask the MCP client which workspace roots it has made available to this server.",
-      inputSchema: {},
+      inputSchema: z.object({}),
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,

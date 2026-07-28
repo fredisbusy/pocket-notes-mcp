@@ -1,5 +1,5 @@
-import { completable } from "@modelcontextprotocol/sdk/server/completable.js";
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { completable } from "@modelcontextprotocol/server";
+import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 
 import type { NoteStore } from "./note-store";
@@ -12,7 +12,7 @@ export function registerPrompts(server: McpServer, store: NoteStore): void {
     {
       title: "Review a note",
       description: "Create a reusable learning prompt for one saved note.",
-      argsSchema: {
+      argsSchema: z.object({
         noteId: completable(z.string().min(1), async (value: string) => {
           const normalizedValue = value.toLowerCase();
           return (await store.list())
@@ -29,7 +29,7 @@ export function registerPrompts(server: McpServer, store: NoteStore): void {
           (value: string | undefined) =>
             reviewStyles.filter((style) => style.startsWith(value?.toLowerCase() ?? "")),
         ),
-      },
+      }),
     },
     async ({ noteId, style }) => {
       const note = await store.get(noteId);

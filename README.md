@@ -31,23 +31,29 @@ MCP Client가 해당 capability를 선언했을 때만 작동하며, 지원하�
 
 - Node.js 24 LTS 권장 (`.nvmrc` 제공)
 - Node.js 22 LTS도 호환
-- npm 10 이상
+- pnpm 10 이상
 
-프로덕션 지원 중인 `@modelcontextprotocol/sdk` v1.29.0을 고정해서 사용합니다.
-SDK v2는 이 프로젝트 작성 시점에 베타이므로 사용하지 않습니다.
+MCP TypeScript SDK v2의 분리 패키지를 사용합니다.
+
+- `@modelcontextprotocol/server`: `McpServer`, 서버 전송, 서버 측 공용 타입
+- `@modelcontextprotocol/client`: 테스트·smoke test용 `Client`와 클라이언트 전송
+- `@modelcontextprotocol/core`: 공개 프로토콜 Zod 스키마
+
+각 패키지는 `package.json`의 명시적 subpath export를 제공하므로 import 경로에
+`.js` 확장자를 붙이지 않습니다.
 
 ## 시작하기
 
 ```bash
 cd /Users/home/Projects/pocket-notes-mcp
-npm install
-npm run check
+pnpm install
+pnpm check
 ```
 
 개발 모드:
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 아무 출력 없이 계속 실행되는 것이 정상입니다. stdio MCP 서버는 사람이 터미널에
@@ -58,8 +64,8 @@ npm run dev
 빌드된 서버 실행:
 
 ```bash
-npm run build
-npm start
+pnpm build
+pnpm start
 ```
 
 ## MCP Host에 연결
@@ -91,7 +97,7 @@ Host 설정 형식은 제품마다 조금씩 다르지만 핵심 값은 같습�
 먼저 빌드합니다.
 
 ```bash
-npm run build
+pnpm build
 ```
 
 그다음 공식 Inspector로 서버를 실행합니다.
@@ -133,6 +139,7 @@ pocket-notes-mcp/
 │   ├── server.test.ts
 │   └── client-capabilities.test.ts
 ├── scripts/
+│   ├── clean.ts                 빌드 산출물 정리
 │   └── stdio-smoke.ts           실제 stdio 연결 smoke test
 ├── package.json
 └── tsconfig.json
@@ -200,7 +207,7 @@ Host/Client → Tool 호출 → MCP Server
 ## 테스트
 
 ```bash
-npm test
+pnpm test
 ```
 
 테스트는 함수만 직접 호출하지 않습니다. SDK의 `InMemoryTransport`로 실제 MCP
@@ -218,7 +225,7 @@ Client와 Server를 연결해 다음 프로토콜 동작을 검증합니다.
 전체 검증:
 
 ```bash
-npm run check
+pnpm check
 ```
 
 ## 안전 경계

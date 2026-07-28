@@ -1,19 +1,20 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
-import { dirname } from "node:path";
+import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { dirname, resolve } from "node:path";
 
-import { type Note, noteCollectionSchema } from "./note";
-
-export interface CreateNoteInput {
-  title: string;
-  body: string;
-  tags?: string[];
-}
+import {
+  type CreateNoteInput,
+  type Note,
+  createNoteInputSchema,
+  noteCollectionSchema,
+} from "./note";
 
 export class NoteStore {
-  private mutationQueue: Promise<void> = Promise.resolve();
+  private readonly filePath: string;
 
-  public constructor(private readonly filePath: string) {}
+  public constructor(filePath: string) {
+    this.filePath = resolve(filePath);
+  }
 
   public async list(tag?: string): Promise<Note[]> {
     const notes = await this.readAll();
@@ -33,13 +34,14 @@ export class NoteStore {
   }
 
   public async create(input: CreateNoteInput): Promise<Note> {
-    const operation = this.mutationQueue.then(async () => {
+    const parsedInput = createNoteInputSchema.parse(input);
+    return enqueueMutation(this.filePath, async () => {
       const notes = await this.readAll();
       const note: Note = {
-        id: createNoteId(input.title),
-        title: input.title.trim(),
-        body: input.body.trim(),
-        tags: normalizeTags(input.tags ?? []),
+        id: createNoteId(parsedInput.title),
+        title: parsedInput.title,
+        body: parsedInput.body,
+        tags: normalizeTags(parsedInput.tags),
         createdAt: new Date().toISOString(),
       };
 
@@ -47,12 +49,6 @@ export class NoteStore {
       await this.writeAll(notes);
       return note;
     });
-
-    this.mutationQueue = operation.then(
-      () => undefined,
-      () => undefined,
-    );
-    return operation;
   }
 
   public async tags(): Promise<string[]> {
@@ -75,10 +71,33 @@ export class NoteStore {
   private async writeAll(notes: Note[]): Promise<void> {
     await mkdir(dirname(this.filePath), { recursive: true });
 
-    const temporaryPath = `${this.filePath}.${process.pid}.tmp`;
-    await writeFile(temporaryPath, `${JSON.stringify(notes, null, 2)}\n`, "utf8");
-    await rename(temporaryPath, this.filePath);
+    const temporaryPath = `${this.filePath}.${process.pid}.${randomUUID()}.tmp`;
+    try {
+      await writeFile(temporaryPath, `${JSON.stringify(notes, null, 2)}\n`, "utf8");
+      await rename(temporaryPath, this.filePath);
+    } finally {
+      await rm(temporaryPath, { force: true });
+    }
   }
+}
+
+const mutationQueues = new Map<string, Promise<void>>();
+
+function enqueueMutation<T>(filePath: string, mutation: () => Promise<T>): Promise<T> {
+  const operation = (mutationQueues.get(filePath) ?? Promise.resolve()).then(mutation);
+  const settled = operation.then(
+    () => undefined,
+    () => undefined,
+  );
+
+  mutationQueues.set(filePath, settled);
+  void settled.finally(() => {
+    if (mutationQueues.get(filePath) === settled) {
+      mutationQueues.delete(filePath);
+    }
+  });
+
+  return operation;
 }
 
 function createNoteId(title: string): string {

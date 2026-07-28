@@ -2,14 +2,9 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { Client } from "@modelcontextprotocol/sdk/client";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import {
-  CallToolResultSchema,
-  CreateMessageRequestSchema,
-  ElicitRequestSchema,
-  ListRootsRequestSchema,
-} from "@modelcontextprotocol/sdk/types.js";
+import { Client } from "@modelcontextprotocol/client";
+import { CallToolResultSchema } from "@modelcontextprotocol/core";
+import { InMemoryTransport } from "@modelcontextprotocol/server";
 import { expect, it } from "vitest";
 
 import { NoteStore } from "../src/note-store";
@@ -36,13 +31,13 @@ it("uses sampling, elicitation, and roots declared by the client", async () => {
     },
   );
 
-  client.setRequestHandler(CreateMessageRequestSchema, () => ({
+  client.setRequestHandler("sampling/createMessage", () => ({
     role: "assistant",
     model: "test-model",
     content: { type: "text", text: "샘플링으로 생성한 요약" },
     stopReason: "endTurn",
   }));
-  client.setRequestHandler(ElicitRequestSchema, () => ({
+  client.setRequestHandler("elicitation/create", () => ({
     action: "accept",
     content: {
       title: "Interactive Note",
@@ -50,7 +45,7 @@ it("uses sampling, elicitation, and roots declared by the client", async () => {
       tags: ["mcp"],
     },
   }));
-  client.setRequestHandler(ListRootsRequestSchema, () => ({
+  client.setRequestHandler("roots/list", () => ({
     roots: [{ uri: "file:///workspace", name: "Workspace" }],
   }));
 

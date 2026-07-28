@@ -1,7 +1,8 @@
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { scheduler } from "node:timers/promises";
+import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 
-import { noteSchema, toNoteSummary } from "./note";
+import { createNoteInputSchema, noteSchema, toNoteSummary } from "./note";
 import type { NoteStore } from "./note-store";
 import { registerClientCapabilityTools } from "./register-client-tools";
 
@@ -28,9 +29,9 @@ export function registerTools(server: McpServer, store: NoteStore): void {
     {
       title: "List notes",
       description: "List note summaries, optionally filtered by an exact tag.",
-      inputSchema: {
+      inputSchema: z.object({
         tag: z.string().trim().min(1).optional().describe("Optional exact tag filter"),
-      },
+      }),
       outputSchema: listNotesOutputSchema,
       annotations: {
         readOnlyHint: true,
@@ -54,11 +55,7 @@ export function registerTools(server: McpServer, store: NoteStore): void {
     {
       title: "Create note",
       description: "Create a local note. This changes the notes JSON file but does not delete data.",
-      inputSchema: {
-        title: z.string().trim().min(1).max(120),
-        body: z.string().trim().min(1).max(10_000),
-        tags: z.array(z.string().trim().min(1).max(40)).max(10).default([]),
-      },
+      inputSchema: createNoteInputSchema,
       outputSchema: noteSchema,
       annotations: {
         readOnlyHint: false,
@@ -98,7 +95,7 @@ export function registerTools(server: McpServer, store: NoteStore): void {
       title: "Analyze note tags",
       description:
         "Count notes by tag while demonstrating MCP progress notifications and cancellation.",
-      inputSchema: {},
+      inputSchema: z.object({}),
       outputSchema: z.object({
         noteCount: z.number().int().nonnegative(),
         tags: z.array(tagCountSchema),
@@ -110,12 +107,16 @@ export function registerTools(server: McpServer, store: NoteStore): void {
         openWorldHint: false,
       },
     },
-    async (_arguments, extra) => {
+    async (_arguments, ctx) => {
       const notes = await store.list();
       const counts = new Map<string, number>();
 
       for (const [index, note] of notes.entries()) {
-        if (extra.signal.aborted) {
+        if (index > 0 && index % 100 === 0) {
+          await scheduler.yield();
+        }
+
+        if (ctx.mcpReq.signal.aborted) {
           return {
             content: [{ type: "text", text: "메모 분석이 취소되었습니다." }],
             isError: true,
@@ -126,11 +127,11 @@ export function registerTools(server: McpServer, store: NoteStore): void {
           counts.set(tag, (counts.get(tag) ?? 0) + 1);
         }
 
-        if (extra._meta?.progressToken !== undefined) {
-          await extra.sendNotification({
+        if (ctx.mcpReq._meta?.progressToken !== undefined) {
+          await ctx.mcpReq.notify({
             method: "notifications/progress",
             params: {
-              progressToken: extra._meta.progressToken,
+              progressToken: ctx.mcpReq._meta.progressToken,
               progress: index + 1,
               total: notes.length,
               message: `${index + 1}/${notes.length}개 메모 분석`,

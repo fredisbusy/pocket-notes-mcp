@@ -1,4 +1,4 @@
-import { mkdtemp, readFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -9,7 +9,6 @@ import { NoteStore } from "../src/note-store";
 const temporaryDirectories: string[] = [];
 
 afterEach(async () => {
-  const { rm } = await import("node:fs/promises");
   await Promise.all(
     temporaryDirectories.splice(0).map((directory) =>
       rm(directory, { recursive: true, force: true }),
@@ -43,6 +42,14 @@ describe("NoteStore", () => {
     expect(persisted.endsWith("\n")).toBe(true);
   });
 
+  it("rejects input that becomes invalid after normalization", async () => {
+    const { store, filePath } = await createTemporaryStoreWithPath();
+
+    await expect(store.create({ title: "   ", body: "Valid body" })).rejects.toThrow();
+    await expect(store.create({ title: "Valid title", body: "\n\t" })).rejects.toThrow();
+    await expect(readFile(filePath, "utf8")).rejects.toMatchObject({ code: "ENOENT" });
+  });
+
   it("does not lose concurrent writes", async () => {
     const store = await createTemporaryStore();
 
@@ -56,6 +63,18 @@ describe("NoteStore", () => {
     );
 
     await expect(store.list()).resolves.toHaveLength(20);
+  });
+
+  it("serializes writes across stores in the same process", async () => {
+    const { store: firstStore, filePath } = await createTemporaryStoreWithPath();
+    const secondStore = new NoteStore(filePath);
+
+    await Promise.all([
+      firstStore.create({ title: "First", body: "Created by the first store" }),
+      secondStore.create({ title: "Second", body: "Created by the second store" }),
+    ]);
+
+    await expect(firstStore.list()).resolves.toHaveLength(2);
   });
 });
 

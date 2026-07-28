@@ -2,9 +2,9 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { Client } from "@modelcontextprotocol/sdk/client";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import { CallToolResultSchema } from "@modelcontextprotocol/sdk/types.js";
+import { Client } from "@modelcontextprotocol/client";
+import { CallToolResultSchema } from "@modelcontextprotocol/core";
+import { InMemoryTransport } from "@modelcontextprotocol/server";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { NoteStore } from "../src/note-store";
@@ -13,11 +13,12 @@ import { createServer } from "../src/server";
 let temporaryDirectory: string;
 let client: Client;
 let server: ReturnType<typeof createServer>;
+let store: NoteStore;
 let noteId: string;
 
 beforeEach(async () => {
   temporaryDirectory = await mkdtemp(join(tmpdir(), "pocket-notes-server-"));
-  const store = new NoteStore(join(temporaryDirectory, "notes.json"));
+  store = new NoteStore(join(temporaryDirectory, "notes.json"));
   const note = await store.create({
     title: "MCP Host",
     body: "Host 안의 Client가 Server와 통신합니다.",
@@ -66,6 +67,30 @@ describe("Pocket Notes MCP protocol", () => {
       count: 1,
       notes: [{ id: noteId, title: "MCP Host" }],
     });
+  });
+
+  it("analyzes tags and reports progress", async () => {
+    await store.create({
+      title: "Resources",
+      body: "Resources expose contextual data.",
+      tags: ["mcp", "resources"],
+    });
+    const progress: number[] = [];
+
+    const result = await client.callTool(
+      { name: "analyze_notes", arguments: {} },
+      { onprogress: ({ progress: current }) => progress.push(current) },
+    );
+
+    expect(result.structuredContent).toEqual({
+      noteCount: 2,
+      tags: [
+        { tag: "mcp", count: 2 },
+        { tag: "architecture", count: 1 },
+        { tag: "resources", count: 1 },
+      ],
+    });
+    expect(progress).toEqual([1, 2]);
   });
 
   it("lists and reads note resources", async () => {

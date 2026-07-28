@@ -2,7 +2,7 @@
 
 import { resolve } from "node:path";
 
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
 
 import { NoteStore } from "./note-store";
 import { createServer } from "./server";

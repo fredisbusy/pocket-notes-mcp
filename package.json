@@ -2,6 +2,7 @@
   "name": "pocket-notes-mcp",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@10.28.0",
   "description": "A small, learning-focused MCP server that demonstrates tools, resources, prompts, completion, sampling, elicitation, progress, and cancellation.",
   "type": "module",
   "bin": {
@@ -14,19 +15,22 @@
   ],
   "scripts": {
     "dev": "tsx src/index.ts",
-    "build": "npm run typecheck && esbuild src/index.ts --bundle --platform=node --format=esm --packages=external --sourcemap --outfile=dist/index.js",
+    "clean": "tsx scripts/clean.ts",
+    "build": "pnpm typecheck && pnpm clean && esbuild src/index.ts --bundle --platform=node --format=esm --packages=external --sourcemap --outfile=dist/index.js",
     "start": "node dist/index.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "smoke": "npm run build && tsx scripts/stdio-smoke.ts",
-    "check": "npm run typecheck && npm test && npm run smoke"
+    "smoke": "pnpm build && tsx scripts/stdio-smoke.ts",
+    "check": "pnpm typecheck && pnpm test && pnpm smoke"
   },
   "engines": {
     "node": ">=22 <27"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "1.29.0",
+    "@modelcontextprotocol/client": "^2.0.0",
+    "@modelcontextprotocol/core": "^2.0.0",
+    "@modelcontextprotocol/server": "^2.0.0",
     "zod": "4.4.3"
   },
   "devDependencies": {
@@ -36,7 +40,9 @@
     "typescript": "7.0.2",
     "vitest": "4.1.10"
   },
-  "overrides": {
-    "@hono/node-server": "2.0.11"
+  "pnpm": {
+    "overrides": {
+      "@hono/node-server": "2.0.11"
+    }
   }
 }

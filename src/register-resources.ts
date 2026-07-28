@@ -1,5 +1,4 @@
-import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
-
+import { McpServer, ResourceTemplate } from "@modelcontextprotocol/server";
 import { noteToMarkdown, toNoteSummary } from "./note";
 import type { NoteStore } from "./note-store";
 

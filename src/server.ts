@@ -1,5 +1,4 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-
+import { McpServer } from "@modelcontextprotocol/server";
 import type { NoteStore } from "./note-store";
 import { registerPrompts } from "./register-prompts";
 import { registerResources } from "./register-resources";
