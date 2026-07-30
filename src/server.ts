@@ -11,15 +11,20 @@ export function createServer(store: NoteStore): McpServer {
       version: "0.1.0",
     },
     {
-      capabilities: {
-        logging: {},
+      cacheHints: {
+        "tools/list": { ttlMs: 60_000, cacheScope: "public" },
+        "prompts/list": { ttlMs: 60_000, cacheScope: "public" },
+        "resources/list": { ttlMs: 1_000, cacheScope: "private" },
+        "resources/templates/list": { ttlMs: 60_000, cacheScope: "public" },
+        "resources/read": { ttlMs: 0, cacheScope: "private" },
+        "server/discover": { ttlMs: 60_000, cacheScope: "public" },
       },
       instructions: [
         "Pocket Notes는 쉬운 장보기 메모로 MCP를 배우는 로컬 서버입니다.",
         "메모 ID를 모르면 먼저 list_notes를 사용하세요.",
         "전체 내용은 notes://note/{id} Resource로 읽으세요.",
         "새 장보기 메모는 설정된 로컬 JSON 파일에만 저장됩니다.",
-        "Sampling, Elicitation, Roots Tool은 Client가 해당 기능을 지원할 때만 작동합니다.",
+        "Sampling, Elicitation, Roots 예제는 Client가 해당 입력 요청을 지원할 때만 작동합니다.",
       ].join(" "),
     },
   );

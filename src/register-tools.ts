@@ -68,11 +68,9 @@ export function registerTools(server: McpServer, store: NoteStore): void {
       const note = await store.create({ title, body, tags });
       server.sendResourceListChanged();
 
-      await server.sendLoggingMessage({
-        level: "info",
-        logger: "pocket-notes",
-        data: { event: "note_created", noteId: note.id },
-      });
+      console.error(
+        `[pocket-notes] ${JSON.stringify({ event: "note_created", noteId: note.id })}`,
+      );
 
       return {
         content: [

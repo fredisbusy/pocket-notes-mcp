@@ -32,13 +32,15 @@ MCP Host에 서버를 연결한 뒤 아래처럼 요청해 보세요.
 | Completion | 메모 ID와 정리 방식을 추천 |
 | Notifications | 새 메모가 생겼음을 Client에 알림 |
 | Progress / cancellation | 여러 메모의 분류를 확인하는 진행 상황 |
-| Sampling | Host의 모델로 장보기 메모를 짧게 정리 |
-| Elicitation | 간단한 입력 폼으로 장보기 메모 만들기 |
-| Roots | Client가 공개한 작업 폴더 확인 |
-| Logging | 장보기 메모 생성 이벤트 기록 |
+| Multi-round-trip input | Sampling·Elicitation·Roots 입력을 받아 원 요청 재실행 |
+| Subscriptions | `subscriptions/listen`으로 메모 목록 변경 알림 |
+| Cache hints | 목록·Resource·Discovery 결과의 TTL과 공개 범위 |
+| Logging | stdio의 `stderr`로 메모 생성 이벤트 기록 |
 
-Tools, Resources, Prompts가 프로젝트의 핵심입니다. Sampling, Elicitation, Roots는
-MCP Client가 해당 기능을 지원할 때만 작동합니다.
+Tools, Resources, Prompts가 프로젝트의 핵심입니다. 최신 2026-07-28 프로토콜에서는
+`server/discover`와 요청별 capability를 사용하고, Client 입력은 multi-round-trip
+`input_required` 결과로 요청합니다. Sampling과 Roots는 deprecated 예제를 이해하기
+위해 남겨 두었으며 Client가 해당 입력 요청을 지원할 때만 작동합니다.
 
 ## 주요 기능
 

@@ -9,10 +9,29 @@ const temporaryDirectory = await mkdtemp(join(tmpdir(), "pocket-notes-stdio-"));
 const notesFile = join(temporaryDirectory, "notes.json");
 const serverEntry = resolve("dist/index.js");
 
-const client = new Client({
-  name: "pocket-notes-stdio-smoke",
-  version: "1.0.0",
-});
+const client = new Client(
+  {
+    name: "pocket-notes-stdio-smoke",
+    version: "1.0.0",
+  },
+  {
+    capabilities: {
+      elicitation: { form: {} },
+    },
+    versionNegotiation: {
+      mode: { pin: "2026-07-28" },
+    },
+  },
+);
+client.setRequestHandler("elicitation/create", () => ({
+  action: "accept",
+  content: {
+    title: "생활용품",
+    body: "주방 세제 1개",
+    tags: ["생활용품"],
+  },
+}));
+
 const transport = new StdioClientTransport({
   command: process.execPath,
   args: [serverEntry],
@@ -24,6 +43,21 @@ const transport = new StdioClientTransport({
 
 try {
   await client.connect(transport);
+
+  if (client.getProtocolEra() !== "modern") {
+    throw new Error(`expected modern MCP era, got ${client.getProtocolEra() ?? "none"}`);
+  }
+
+  const discovery = client.getDiscoverResult();
+  if (
+    discovery?.supportedVersions.includes("2026-07-28") !== true ||
+    discovery.ttlMs !== 60_000 ||
+    discovery.cacheScope !== "public"
+  ) {
+    throw new Error("server/discover did not advertise the modern protocol and cache hints");
+  }
+
+  const subscription = await client.listen({ resourcesListChanged: true });
 
   const { tools } = await client.listTools();
   if (!tools.some((tool) => tool.name === "create_note")) {
@@ -55,7 +89,29 @@ try {
     throw new Error("list_notes did not return the created memo");
   }
 
-  console.log(`stdio smoke passed: ${tools.length} tools, 1 shopping memo`);
+  const interactive = await client.callTool({
+    name: "create_note_interactive",
+    arguments: {},
+  });
+  if (interactive.isError === true) {
+    throw new Error("modern multi-round-trip elicitation failed");
+  }
+
+  const listedAfterInteractive = await client.callTool({
+    name: "list_notes",
+    arguments: {},
+  });
+  if (
+    typeof listedAfterInteractive.structuredContent !== "object" ||
+    listedAfterInteractive.structuredContent === null ||
+    !("count" in listedAfterInteractive.structuredContent) ||
+    listedAfterInteractive.structuredContent.count !== 2
+  ) {
+    throw new Error("multi-round-trip elicitation did not create the second memo");
+  }
+
+  await subscription.close();
+  console.log(`stdio smoke passed: modern discovery, subscription, ${tools.length} tools`);
 } finally {
   await client.close();
   await rm(temporaryDirectory, { recursive: true, force: true });

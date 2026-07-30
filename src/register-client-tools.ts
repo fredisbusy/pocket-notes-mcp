@@ -1,4 +1,9 @@
-import type { McpServer } from "@modelcontextprotocol/server";
+import {
+  acceptedContent,
+  inputRequired,
+  inputResponse,
+  type McpServer,
+} from "@modelcontextprotocol/server";
 import { z } from "zod";
 
 import { createNoteInputSchema } from "./note";
@@ -26,28 +31,47 @@ export function registerClientCapabilityTools(server: McpServer, store: NoteStor
         openWorldHint: false,
       },
     },
-    async ({ noteId }) => {
-      if (server.server.getClientCapabilities()?.sampling === undefined) {
-        return unsupportedCapability("sampling");
+    async ({ noteId }, ctx) => {
+      const note = await requireNote(store, noteId);
+      const response = inputResponse(ctx.mcpReq.inputResponses, "summary");
+
+      if (response.kind === "missing") {
+        return inputRequired({
+          inputRequests: {
+            summary: inputRequired.createMessage({
+              messages: [
+                {
+                  role: "user",
+                  content: {
+                    type: "text",
+                    text: `다음 장보기 메모를 매장에서 바로 볼 수 있는 짧은 목록으로 정리해 주세요.\n\n${note.body}`,
+                  },
+                },
+              ],
+              maxTokens: 300,
+            }),
+          },
+        });
       }
 
-      const note = await requireNote(store, noteId);
-      const response = await server.server.createMessage({
-        messages: [
-          {
-            role: "user",
-            content: {
+      if (response.kind !== "sampling") {
+        return {
+          content: [
+            {
               type: "text",
-              text: `다음 장보기 메모를 매장에서 바로 볼 수 있는 짧은 목록으로 정리해 주세요.\n\n${note.body}`,
+              text: "연결된 MCP Client가 sampling 입력 요청을 처리하지 못했습니다.",
             },
-          },
-        ],
-        maxTokens: 300,
-      });
+          ],
+          isError: true,
+        };
+      }
 
+      const samplingContent = Array.isArray(response.result.content)
+        ? response.result.content.find((content) => content.type === "text")
+        : response.result.content;
       const text =
-        response.content.type === "text"
-          ? response.content.text
+        samplingContent?.type === "text"
+          ? samplingContent.text
           : "호스트 모델이 텍스트가 아닌 응답을 반환했습니다.";
       return { content: [{ type: "text", text }] };
     },
@@ -67,61 +91,68 @@ export function registerClientCapabilityTools(server: McpServer, store: NoteStor
         openWorldHint: false,
       },
     },
-    async () => {
-      if (server.server.getClientCapabilities()?.elicitation === undefined) {
-        return unsupportedCapability("elicitation");
-      }
+    async (_arguments, ctx) => {
+      const response = inputResponse(ctx.mcpReq.inputResponses, "note");
 
-      const result = await server.server.elicitInput({
-        mode: "form",
-        message: "무엇을 사야 하나요? 장보기 내용을 간단히 적어 주세요.",
-        requestedSchema: {
-          type: "object",
-          properties: {
-            title: { type: "string", title: "메모 이름", minLength: 1, maxLength: 120 },
-            body: { type: "string", title: "살 것", minLength: 1, maxLength: 10_000 },
-            tags: {
-              type: "array",
-              title: "분류",
-              items: {
-                type: "string",
-                enum: [
-                  "식료품",
-                  "채소",
-                  "과일",
-                  "간식",
-                  "생활용품",
-                  "이번주",
-                  "기타",
-                ],
-              },
-              maxItems: 10,
-            },
-          },
-          required: ["title", "body"],
-        },
-      });
-
-      if (result.action !== "accept") {
+      if (response.kind === "elicit" && response.action !== "accept") {
         return {
           content: [
-            { type: "text", text: `장보기 메모를 만들지 않았습니다: ${result.action}` },
+            { type: "text", text: `장보기 메모를 만들지 않았습니다: ${response.action}` },
           ],
         };
       }
 
-      const parsed = createNoteInputSchema.safeParse(result.content);
-      if (!parsed.success) {
-        return {
-          content: [{ type: "text", text: "장보기 메모의 입력 내용을 확인해 주세요." }],
-          isError: true,
-        };
+      const content = acceptedContent(ctx.mcpReq.inputResponses, "note", createNoteInputSchema);
+      if (content === undefined) {
+        return inputRequired({
+          inputRequests: {
+            note: inputRequired.elicit({
+              mode: "form",
+              message: "무엇을 사야 하나요? 장보기 내용을 간단히 적어 주세요.",
+              requestedSchema: {
+                type: "object",
+                properties: {
+                  title: {
+                    type: "string",
+                    title: "메모 이름",
+                    minLength: 1,
+                    maxLength: 120,
+                  },
+                  body: {
+                    type: "string",
+                    title: "살 것",
+                    minLength: 1,
+                    maxLength: 10_000,
+                  },
+                  tags: {
+                    type: "array",
+                    title: "분류",
+                    items: {
+                      type: "string",
+                      enum: [
+                        "식료품",
+                        "채소",
+                        "과일",
+                        "간식",
+                        "생활용품",
+                        "이번주",
+                        "기타",
+                      ],
+                    },
+                    maxItems: 10,
+                  },
+                },
+                required: ["title", "body"],
+              },
+            }),
+          },
+        });
       }
 
       const note = await store.create({
-        title: parsed.data.title,
-        body: parsed.data.body,
-        tags: parsed.data.tags ?? [],
+        title: content.title,
+        body: content.body,
+        tags: content.tags ?? [],
       });
       server.sendResourceListChanged();
       return {
@@ -152,12 +183,26 @@ export function registerClientCapabilityTools(server: McpServer, store: NoteStor
         openWorldHint: false,
       },
     },
-    async () => {
-      if (server.server.getClientCapabilities()?.roots === undefined) {
-        return unsupportedCapability("roots");
+    async (_arguments, ctx) => {
+      const response = inputResponse(ctx.mcpReq.inputResponses, "roots");
+      if (response.kind === "missing") {
+        return inputRequired({
+          inputRequests: {
+            roots: inputRequired.listRoots(),
+          },
+        });
       }
 
-      const { roots } = await server.server.listRoots();
+      if (response.kind !== "roots") {
+        return {
+          content: [
+            { type: "text", text: "연결된 MCP Client가 roots 입력 요청을 처리하지 못했습니다." },
+          ],
+          isError: true,
+        };
+      }
+
+      const { roots } = response;
       return {
         content: [{ type: "text", text: JSON.stringify({ roots }, null, 2) }],
         structuredContent: { roots },
@@ -172,16 +217,4 @@ async function requireNote(store: NoteStore, id: string) {
     throw new Error(`메모를 찾을 수 없습니다: ${id}`);
   }
   return note;
-}
-
-function unsupportedCapability(capability: "sampling" | "elicitation" | "roots") {
-  return {
-    content: [
-      {
-        type: "text" as const,
-        text: `연결된 MCP Client가 ${capability} capability를 지원하지 않습니다.`,
-      },
-    ],
-    isError: true,
-  };
 }
