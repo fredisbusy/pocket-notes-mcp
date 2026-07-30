@@ -4,14 +4,14 @@ import { z } from "zod";
 
 import type { NoteStore } from "./note-store";
 
-const reviewStyles = ["beginner", "quiz", "summary", "interview"] as const;
+const shoppingStyles = ["simple", "checklist", "budget", "meal"] as const;
 
 export function registerPrompts(server: McpServer, store: NoteStore): void {
   server.registerPrompt(
-    "review_note",
+    "prepare_shopping",
     {
-      title: "Review a note",
-      description: "Create a reusable learning prompt for one saved note.",
+      title: "장보기 준비하기",
+      description: "저장된 메모를 실제 장보기에 쓰기 좋게 정리합니다.",
       argsSchema: z.object({
         noteId: completable(z.string().min(1), async (value: string) => {
           const normalizedValue = value.toLowerCase();
@@ -25,9 +25,9 @@ export function registerPrompts(server: McpServer, store: NoteStore): void {
             .slice(0, 20);
         }),
         style: completable(
-          z.enum(reviewStyles).default("beginner"),
+          z.enum(shoppingStyles).default("simple"),
           (value: string | undefined) =>
-            reviewStyles.filter((style) => style.startsWith(value?.toLowerCase() ?? "")),
+            shoppingStyles.filter((style) => style.startsWith(value?.toLowerCase() ?? "")),
         ),
       }),
     },
@@ -38,7 +38,7 @@ export function registerPrompts(server: McpServer, store: NoteStore): void {
       }
 
       return {
-        description: `${note.title} 메모를 ${style} 방식으로 복습합니다.`,
+        description: `${note.title} 메모를 ${style} 방식으로 장보기 좋게 정리합니다.`,
         messages: [
           {
             role: "user",
@@ -64,15 +64,15 @@ export function registerPrompts(server: McpServer, store: NoteStore): void {
   );
 }
 
-function instructionForStyle(style: (typeof reviewStyles)[number]): string {
+function instructionForStyle(style: (typeof shoppingStyles)[number]): string {
   switch (style) {
-    case "beginner":
-      return "이 내용을 처음 접하는 사람도 이해할 수 있도록 쉬운 예시와 함께 설명해 주세요.";
-    case "quiz":
-      return "핵심 개념을 확인하는 짧은 질문 세 개를 한 번에 하나씩 내주세요.";
-    case "summary":
-      return "핵심 내용을 세 개의 불릿으로 요약해 주세요.";
-    case "interview":
-      return "기술 면접관처럼 개념과 적용 방법을 차례로 질문해 주세요.";
+    case "simple":
+      return "살 것만 짧고 쉬운 목록으로 정리해 주세요.";
+    case "checklist":
+      return "매장에서 하나씩 확인할 수 있는 체크리스트로 만들어 주세요.";
+    case "budget":
+      return "꼭 필요한 것과 나중에 사도 되는 것을 나누고, 절약 팁을 덧붙여 주세요.";
+    case "meal":
+      return "이 재료로 만들 수 있는 간단한 식사와 빠진 재료를 알려 주세요.";
   }
 }

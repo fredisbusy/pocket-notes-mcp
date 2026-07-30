@@ -7,8 +7,8 @@ export function registerResources(server: McpServer, store: NoteStore): void {
     "note-catalog",
     "notes://catalog",
     {
-      title: "Note catalog",
-      description: "A compact JSON catalog of every note.",
+      title: "장보기 메모 목록",
+      description: "저장된 장보기 메모를 한눈에 보는 JSON 목록입니다.",
       mimeType: "application/json",
     },
     async (uri) => {
@@ -56,12 +56,12 @@ export function registerResources(server: McpServer, store: NoteStore): void {
     "note",
     noteTemplate,
     {
-      title: "Note",
-      description: "A single note rendered as Markdown.",
+      title: "장보기 메모",
+      description: "장보기 메모 하나를 읽기 쉬운 Markdown으로 보여줍니다.",
       mimeType: "text/markdown",
     },
     async (uri, variables) => {
-      const id = firstTemplateValue(variables.id);
+      const id = decodeURIComponent(firstTemplateValue(variables.id));
       const note = await store.get(id);
       if (note === undefined) {
         throw new Error(`메모를 찾을 수 없습니다: ${id}`);

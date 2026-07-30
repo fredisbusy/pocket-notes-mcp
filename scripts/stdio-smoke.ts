@@ -33,9 +33,9 @@ try {
   const created = await client.callTool({
     name: "create_note",
     arguments: {
-      title: "stdio smoke test",
-      body: "A real child process handled this MCP request.",
-      tags: ["test"],
+      title: "주말 장보기",
+      body: "우유 1팩\n사과 4개",
+      tags: ["식료품"],
     },
   });
   if (created.isError === true) {
@@ -52,10 +52,10 @@ try {
     !("count" in listed.structuredContent) ||
     listed.structuredContent.count !== 1
   ) {
-    throw new Error("list_notes did not return the created note");
+    throw new Error("list_notes did not return the created memo");
   }
 
-  console.log(`stdio smoke passed: ${tools.length} tools, 1 note`);
+  console.log(`stdio smoke passed: ${tools.length} tools, 1 shopping memo`);
 } finally {
   await client.close();
   await rm(temporaryDirectory, { recursive: true, force: true });

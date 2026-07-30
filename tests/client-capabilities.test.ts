@@ -14,9 +14,9 @@ it("uses sampling, elicitation, and roots declared by the client", async () => {
   const temporaryDirectory = await mkdtemp(join(tmpdir(), "pocket-notes-capabilities-"));
   const store = new NoteStore(join(temporaryDirectory, "notes.json"));
   const note = await store.create({
-    title: "Sampling",
-    body: "서버가 Client를 통해 모델 생성을 요청합니다.",
-    tags: ["mcp"],
+    title: "주말 장보기",
+    body: "사과 4개\n요거트 2개",
+    tags: ["식료품"],
   });
 
   const server = createServer(store);
@@ -40,9 +40,9 @@ it("uses sampling, elicitation, and roots declared by the client", async () => {
   client.setRequestHandler("elicitation/create", () => ({
     action: "accept",
     content: {
-      title: "Interactive Note",
-      body: "Elicitation으로 받은 메모",
-      tags: ["mcp"],
+      title: "생활용품",
+      body: "주방 세제 1개",
+      tags: ["생활용품"],
     },
   }));
   client.setRequestHandler("roots/list", () => ({

@@ -28,14 +28,14 @@ export function toNoteSummary(note: Note): NoteSummary {
 }
 
 export function noteToMarkdown(note: Note): string {
-  const tags = note.tags.length > 0 ? note.tags.map((tag) => `#${tag}`).join(" ") : "태그 없음";
+  const tags = note.tags.length > 0 ? note.tags.map((tag) => `#${tag}`).join(" ") : "분류 없음";
 
   return [
     `# ${note.title}`,
     "",
     `- ID: \`${note.id}\``,
-    `- 생성: ${note.createdAt}`,
-    `- 태그: ${tags}`,
+    `- 만든 날짜: ${note.createdAt}`,
+    `- 분류: ${tags}`,
     "",
     note.body,
   ].join("\n");

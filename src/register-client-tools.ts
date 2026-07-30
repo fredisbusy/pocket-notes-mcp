@@ -13,9 +13,9 @@ export function registerClientCapabilityTools(server: McpServer, store: NoteStor
   server.registerTool(
     "summarize_note",
     {
-      title: "Summarize note with the host model",
+      title: "장보기 메모 간단히 정리",
       description:
-        "Read a note and ask the MCP client's language model to summarize it using MCP sampling.",
+        "장보기 메모를 읽고 MCP Client의 모델에게 짧게 정리해 달라고 요청합니다.",
       inputSchema: z.object({
         noteId: z.string().min(1),
       }),
@@ -38,7 +38,7 @@ export function registerClientCapabilityTools(server: McpServer, store: NoteStor
             role: "user",
             content: {
               type: "text",
-              text: `다음 메모를 초보자가 이해하기 쉽게 세 문장 이내로 요약해 주세요.\n\n${note.body}`,
+              text: `다음 장보기 메모를 매장에서 바로 볼 수 있는 짧은 목록으로 정리해 주세요.\n\n${note.body}`,
             },
           },
         ],
@@ -56,9 +56,9 @@ export function registerClientCapabilityTools(server: McpServer, store: NoteStor
   server.registerTool(
     "create_note_interactive",
     {
-      title: "Create note interactively",
+      title: "대화형 장보기 메모 만들기",
       description:
-        "Ask the user for non-sensitive note fields through MCP form elicitation, then create the note.",
+        "간단한 MCP 입력 폼으로 살 것을 물어보고 장보기 메모를 만듭니다.",
       inputSchema: z.object({}),
       annotations: {
         readOnlyHint: false,
@@ -74,25 +74,25 @@ export function registerClientCapabilityTools(server: McpServer, store: NoteStor
 
       const result = await server.server.elicitInput({
         mode: "form",
-        message: "새 메모의 내용을 입력해 주세요. 비밀번호나 API 키는 입력하지 마세요.",
+        message: "무엇을 사야 하나요? 장보기 내용을 간단히 적어 주세요.",
         requestedSchema: {
           type: "object",
           properties: {
-            title: { type: "string", title: "제목", minLength: 1, maxLength: 120 },
-            body: { type: "string", title: "본문", minLength: 1, maxLength: 10_000 },
+            title: { type: "string", title: "메모 이름", minLength: 1, maxLength: 120 },
+            body: { type: "string", title: "살 것", minLength: 1, maxLength: 10_000 },
             tags: {
               type: "array",
-              title: "태그",
+              title: "분류",
               items: {
                 type: "string",
                 enum: [
-                  "mcp",
-                  "architecture",
-                  "tools",
-                  "resources",
-                  "prompts",
-                  "learning",
-                  "other",
+                  "식료품",
+                  "채소",
+                  "과일",
+                  "간식",
+                  "생활용품",
+                  "이번주",
+                  "기타",
                 ],
               },
               maxItems: 10,
@@ -104,14 +104,16 @@ export function registerClientCapabilityTools(server: McpServer, store: NoteStor
 
       if (result.action !== "accept") {
         return {
-          content: [{ type: "text", text: `메모 생성을 진행하지 않았습니다: ${result.action}` }],
+          content: [
+            { type: "text", text: `장보기 메모를 만들지 않았습니다: ${result.action}` },
+          ],
         };
       }
 
       const parsed = createNoteInputSchema.safeParse(result.content);
       if (!parsed.success) {
         return {
-          content: [{ type: "text", text: "호스트가 올바르지 않은 메모 입력을 반환했습니다." }],
+          content: [{ type: "text", text: "장보기 메모의 입력 내용을 확인해 주세요." }],
           isError: true,
         };
       }
@@ -124,7 +126,7 @@ export function registerClientCapabilityTools(server: McpServer, store: NoteStor
       server.sendResourceListChanged();
       return {
         content: [
-          { type: "text", text: `메모를 생성했습니다: notes://note/${note.id}` },
+          { type: "text", text: `장보기 메모를 만들었습니다: notes://note/${note.id}` },
           {
             type: "resource_link",
             uri: `notes://note/${note.id}`,

@@ -15,11 +15,11 @@ export function createServer(store: NoteStore): McpServer {
         logging: {},
       },
       instructions: [
-        "Pocket Notes is a local learning server.",
-        "Use list_notes before reading a note when its ID is unknown.",
-        "Prefer the notes://note/{id} resource when the full note body is needed.",
-        "Creating a note writes only to the configured local JSON file.",
-        "Sampling, elicitation, and roots tools require matching client capabilities.",
+        "Pocket Notes는 쉬운 장보기 메모로 MCP를 배우는 로컬 서버입니다.",
+        "메모 ID를 모르면 먼저 list_notes를 사용하세요.",
+        "전체 내용은 notes://note/{id} Resource로 읽으세요.",
+        "새 장보기 메모는 설정된 로컬 JSON 파일에만 저장됩니다.",
+        "Sampling, Elicitation, Roots Tool은 Client가 해당 기능을 지원할 때만 작동합니다.",
       ].join(" "),
     },
   );

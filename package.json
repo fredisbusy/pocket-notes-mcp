@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "packageManager": "pnpm@10.28.0",
-  "description": "A small, learning-focused MCP server that demonstrates tools, resources, prompts, completion, sampling, elicitation, progress, and cancellation.",
+  "description": "An easy MCP learning server built around familiar shopping memos.",
   "type": "module",
   "bin": {
     "pocket-notes-mcp": "./dist/index.js"

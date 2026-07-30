@@ -20,9 +20,9 @@ beforeEach(async () => {
   temporaryDirectory = await mkdtemp(join(tmpdir(), "pocket-notes-server-"));
   store = new NoteStore(join(temporaryDirectory, "notes.json"));
   const note = await store.create({
-    title: "MCP Host",
-    body: "Host 안의 Client가 Server와 통신합니다.",
-    tags: ["mcp", "architecture"],
+    title: "이번 주 장보기",
+    body: "우유 1팩\n달걀 10개",
+    tags: ["식료품", "이번주"],
   });
   noteId = note.id;
 
@@ -59,21 +59,21 @@ describe("Pocket Notes MCP protocol", () => {
   it("calls a tool and validates structured output", async () => {
     const result = await client.callTool({
       name: "list_notes",
-      arguments: { tag: "mcp" },
+      arguments: { tag: "식료품" },
     });
 
     expect(result.isError).not.toBe(true);
     expect(result.structuredContent).toMatchObject({
       count: 1,
-      notes: [{ id: noteId, title: "MCP Host" }],
+      notes: [{ id: noteId, title: "이번 주 장보기" }],
     });
   });
 
   it("analyzes tags and reports progress", async () => {
     await store.create({
-      title: "Resources",
-      body: "Resources expose contextual data.",
-      tags: ["mcp", "resources"],
+      title: "생활용품",
+      body: "주방 세제\n휴지",
+      tags: ["생활용품", "이번주"],
     });
     const progress: number[] = [];
 
@@ -85,9 +85,9 @@ describe("Pocket Notes MCP protocol", () => {
     expect(result.structuredContent).toEqual({
       noteCount: 2,
       tags: [
-        { tag: "mcp", count: 2 },
-        { tag: "architecture", count: 1 },
-        { tag: "resources", count: 1 },
+        { tag: "이번주", count: 2 },
+        { tag: "생활용품", count: 1 },
+        { tag: "식료품", count: 1 },
       ],
     });
     expect(progress).toEqual([1, 2]);
@@ -100,26 +100,28 @@ describe("Pocket Notes MCP protocol", () => {
 
     const result = await client.readResource({ uri: `notes://note/${noteId}` });
     expect(result.contents[0]).toMatchObject({
-      uri: `notes://note/${noteId}`,
+      uri: new URL(`notes://note/${noteId}`).href,
       mimeType: "text/markdown",
     });
-    expect("text" in result.contents[0]! ? result.contents[0].text : "").toContain("# MCP Host");
+    expect("text" in result.contents[0]! ? result.contents[0].text : "").toContain(
+      "# 이번 주 장보기",
+    );
   });
 
   it("gets a prompt and completes its note ID argument", async () => {
     const { prompts } = await client.listPrompts();
-    expect(prompts.map((prompt) => prompt.name)).toContain("review_note");
+    expect(prompts.map((prompt) => prompt.name)).toContain("prepare_shopping");
 
     const prompt = await client.getPrompt({
-      name: "review_note",
-      arguments: { noteId, style: "quiz" },
+      name: "prepare_shopping",
+      arguments: { noteId, style: "checklist" },
     });
-    expect(prompt.description).toContain("quiz");
+    expect(prompt.description).toContain("checklist");
     expect(prompt.messages).toHaveLength(2);
 
     const completion = await client.complete({
-      ref: { type: "ref/prompt", name: "review_note" },
-      argument: { name: "noteId", value: "mcp" },
+      ref: { type: "ref/prompt", name: "prepare_shopping" },
+      argument: { name: "noteId", value: "장보기" },
     });
     expect(completion.completion.values).toContain(noteId);
   });

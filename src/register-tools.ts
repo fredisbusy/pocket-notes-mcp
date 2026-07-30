@@ -27,10 +27,10 @@ export function registerTools(server: McpServer, store: NoteStore): void {
   server.registerTool(
     "list_notes",
     {
-      title: "List notes",
-      description: "List note summaries, optionally filtered by an exact tag.",
+      title: "장보기 메모 보기",
+      description: "저장된 장보기 메모를 봅니다. 분류 태그로 골라볼 수도 있습니다.",
       inputSchema: z.object({
-        tag: z.string().trim().min(1).optional().describe("Optional exact tag filter"),
+        tag: z.string().trim().min(1).optional().describe("찾고 싶은 분류 태그 (선택)"),
       }),
       outputSchema: listNotesOutputSchema,
       annotations: {
@@ -53,8 +53,8 @@ export function registerTools(server: McpServer, store: NoteStore): void {
   server.registerTool(
     "create_note",
     {
-      title: "Create note",
-      description: "Create a local note. This changes the notes JSON file but does not delete data.",
+      title: "장보기 메모 만들기",
+      description: "살 것과 필요한 내용을 로컬 장보기 메모로 저장합니다.",
       inputSchema: createNoteInputSchema,
       outputSchema: noteSchema,
       annotations: {
@@ -76,7 +76,7 @@ export function registerTools(server: McpServer, store: NoteStore): void {
 
       return {
         content: [
-          { type: "text", text: `메모를 생성했습니다: notes://note/${note.id}` },
+          { type: "text", text: `장보기 메모를 만들었습니다: notes://note/${note.id}` },
           {
             type: "resource_link",
             uri: `notes://note/${note.id}`,
@@ -92,9 +92,9 @@ export function registerTools(server: McpServer, store: NoteStore): void {
   server.registerTool(
     "analyze_notes",
     {
-      title: "Analyze note tags",
+      title: "장보기 분류 확인",
       description:
-        "Count notes by tag while demonstrating MCP progress notifications and cancellation.",
+        "장보기 메모를 분류별로 세어 봅니다. 진행 알림과 취소도 함께 보여주는 예제입니다.",
       inputSchema: z.object({}),
       outputSchema: z.object({
         noteCount: z.number().int().nonnegative(),
@@ -118,7 +118,7 @@ export function registerTools(server: McpServer, store: NoteStore): void {
 
         if (ctx.mcpReq.signal.aborted) {
           return {
-            content: [{ type: "text", text: "메모 분석이 취소되었습니다." }],
+            content: [{ type: "text", text: "장보기 메모 확인을 취소했습니다." }],
             isError: true,
           };
         }
@@ -134,7 +134,7 @@ export function registerTools(server: McpServer, store: NoteStore): void {
               progressToken: ctx.mcpReq._meta.progressToken,
               progress: index + 1,
               total: notes.length,
-              message: `${index + 1}/${notes.length}개 메모 분석`,
+              message: `${index + 1}/${notes.length}개 장보기 메모 확인`,
             },
           });
         }
